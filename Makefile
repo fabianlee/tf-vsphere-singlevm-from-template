@@ -5,7 +5,7 @@ TF := terraform
 apply: init 
 	$(TF) apply -auto-approve
 
-init: create-keypair
+init: 
 	# skips init if .terraform directory already exists
 	[ -d .$(TF) ] || $(TF) init
 
@@ -13,11 +13,6 @@ destroy:
 	$(TF) destroy -auto-approve
 	./clean-known-hosts.sh
 	#rm terraform.tfstate*
-
-## create public/private keypair for ssh
-create-keypair:
-	# skips if file already exists
-	[ -f id_rsa ] || ssh-keygen -t rsa -b 4096 -f id_rsa -C $(PROJECT) -N "" -q
 
 refresh:
 	$(TF) refresh

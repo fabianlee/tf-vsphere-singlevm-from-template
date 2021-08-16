@@ -4,4 +4,5 @@ id_rsa*
 .terraform.lock.hcl
 *.backup
 *.hcl
+*.lock.info
 

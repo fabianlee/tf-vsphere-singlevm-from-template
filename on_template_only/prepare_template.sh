@@ -7,7 +7,7 @@ set -ex
 sudo apt update
 sudo apt dist-upgrade -y
 
-apt-install dnsutils traceroute -y
+sudo apt install dnsutils traceroute -y
 
 echo vm.swappiness=10 | sudo tee -a /etc/sysctl.conf
 echo net.ipv6.conf.all.disable_ipv6=1 | sudo tee -a /etc/sysctl.conf
@@ -20,6 +20,7 @@ sudo sed -i 's/preserve_hostname: false/preserve_hostname: true/g' /etc/cloud/cl
 ls -l /etc/netplan
 sudo rm /etc/netplan/*.yaml
 
-history -c
+rm prepare_template.sh
 
+history -c
 sudo shutdown -h now

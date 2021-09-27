@@ -139,14 +139,6 @@ resource "vsphere_virtual_machine" "vm" {
         "default_args" : local.disk_format_args
       }
     )
-
-    connection {
-      type = "ssh"
-      host = var.jumphost_ip
-      user = var.jumphost_user
-      password = var.jumphost_password
-    }
-
   }
 
   # script that creates partition and filesystem for data disks

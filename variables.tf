@@ -42,6 +42,8 @@ variable "jumphost_ip" {
   description = "jumphost_ip"
 }
 
+variable "jumphost_user" { }
+variable "jumphost_password" {}
 variable "jumphost_cpu" { default=1 }
 variable "jumphost_ram_mb" { default=1024 }
 variable "jumphost_disk_gb" { default=30 }

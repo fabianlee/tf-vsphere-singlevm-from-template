@@ -1,3 +1,4 @@
+# vcenter credentials
 vsphere_user          = "Administrator@vsphere.local"
 vsphere_password      = "ExamplePass@456"
 vsphere_server        = "vcenter.home.lab"
@@ -8,6 +9,9 @@ vsphere_network       = "admin141"
 
 # name of template
 vsphere_template      = "ubuntu-focal"
+# OS template credentials
+jumphost_user         = "ubuntu"
+jumphost_password     = "ExamplePass@456"
 
 jumphost_name         = "ubuntu-focal-vm"
 jumphost_vm_folder    = "" # empty for root location

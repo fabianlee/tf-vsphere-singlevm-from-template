@@ -1,8 +1,17 @@
+locals {
+  # flexible number of data disks for VM
+  disks = [
+    { "id":1, "dev":"sdb", "sizeGB":10, "dir":"/data1" },
+    { "id":2, "dev":"sdc", "sizeGB": 20, "dir":"/data2"  }
+  ]
+  # construct arguments passed to disk partition/filesystem/fstab script
+  # e.g. "sdb,10,/data1 sdc,20,/data2"
+  disk_format_args = join(" ", [for disk in local.disks: "${disk.dev},${disk.sizeGB},${disk.dir}"] )
+}
 
 data "vsphere_datacenter" "dc" {
   name = var.vsphere_datacenter
 }
-
 
 data "vsphere_datastore" "datastore" {
   name          = var.vsphere_datasource
@@ -78,15 +87,19 @@ resource "vsphere_virtual_machine" "vm" {
     client_device = true
   }
 
-  # shows up as device /dev/sdb (lsblk) but will need to be partioned
-#  disk {
-#     label            = "disk1"
-#     unit_number      = 1
-#     datastore_id     = data.vsphere_datastore.datastore.id
-#     size             = 140
-#     eagerly_scrub    = false
-#     thin_provisioned = true
-#  }
+  # creates variable number of disks for VM
+  dynamic "disk" {
+    for_each = [ for disk in local.disks: disk ]
+    
+    content {
+     label            = "disk${disk.value.id}"
+     unit_number      = disk.value.id
+     datastore_id     = data.vsphere_datastore.datastore.id
+     size             = disk.value.sizeGB
+     eagerly_scrub    = false
+     thin_provisioned = true
+    }
+  }
 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
@@ -107,6 +120,43 @@ resource "vsphere_virtual_machine" "vm" {
       dns_suffix_list = var.dns_suffix_list
     }
   }
+
+  connection {
+    type = "ssh"
+    agent = "false"
+    host = var.jumphost_ip
+    user = var.jumphost_user
+    password = var.jumphost_password
+  }
+
+  # make script from template
+  provisioner "file" {
+    destination = "/tmp/basic_disk_filesystem.sh"
+    content = templatefile(
+      "${path.module}/on_template_only/basic_disk_filesystem.sh.tpl",
+      { 
+        "disks": local.disks
+        "default_args" : local.disk_format_args
+      }
+    )
+
+    connection {
+      type = "ssh"
+      host = var.jumphost_ip
+      user = var.jumphost_user
+      password = var.jumphost_password
+    }
+
+  }
+
+  # script that creates partition and filesystem for data disks
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/basic_disk_filesystem.sh",
+      "echo ${var.jumphost_password} | sudo -S /tmp/basic_disk_filesystem.sh ${local.disk_format_args} > /tmp/basic_disk_filesystem.log"
+    ]
+  }
+
 }
 
 

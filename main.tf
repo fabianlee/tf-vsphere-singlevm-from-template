@@ -1,12 +1,14 @@
 locals {
   # flexible number of data disks for VM
+  # mount as disk or LVM is done by remote-exec script
   disks = [
-    { "id":1, "dev":"sdb", "sizeGB":10, "dir":"/data1" },
-    { "id":2, "dev":"sdc", "sizeGB": 20, "dir":"/data2"  }
+    { "id":1, "dev":"sdb", "lvm":0, "sizeGB":10, "dir":"/data1" },
+    { "id":2, "dev":"sdc", "lvm":1, "sizeGB":20, "dir":"/data2"  },
+    { "id":3, "dev":"sdd", "lvm":0, "sizeGB":15, "dir":"/data3"  }
   ]
   # construct arguments passed to disk partition/filesystem/fstab script
-  # e.g. "sdb,10,/data1 sdc,20,/data2"
-  disk_format_args = join(" ", [for disk in local.disks: "${disk.dev},${disk.sizeGB},${disk.dir}"] )
+  # e.g. "sdb,0,10,/data1 sdc,1,20,/data2"
+  disk_format_args = join(" ", [for disk in local.disks: "${disk.dev},${disk.lvm},${disk.sizeGB},${disk.dir}"] )
 }
 
 data "vsphere_datacenter" "dc" {

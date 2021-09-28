@@ -5,6 +5,43 @@
 # non-LVM
 #
 
+# lvm mode
+# creates independent Volume Group and Logical Volume for disk
+function create_lvm_and_mount() {
+
+# passed args
+mydev="$1"
+counter="$2"
+mysize=$3
+mountdir="$4"
+
+dev="/dev/$mydev"
+vgname="data$counter"
+lvname="data$counter"
+
+set -x
+pvcreate $dev
+pvs
+
+vgcreate $vgname $dev
+vgs
+
+lvcreate --name $vgname -l 100%FREE $lvname
+lvs
+lvdisplay $lvname
+set +x
+
+mkfs.ext4 /dev/$vgname/$lvname
+
+mkdir -p $mountdir
+echo '/dev/$vgname/$lvname $mountdir ext4 defaults 0 0' >> /etc/fstab
+mount $mount
+echo "result of mount $mountdir is $?"
+
+}
+
+# non-lvm mode
+# creates primary partition, initializes ext4 filesystem, then mounts filesystem at directory
 function create_partition_and_mount() {
 
 mydev="$1"
@@ -59,17 +96,25 @@ echo "disk_list is $disk_list"
 
 [ $EUID -eq 0 ] || { echo "ERROR script must run as sudo or root"; exit 1; }
 
+LVM_DISK_INDEX=1
 for disk in $disk_list; do
   echo "disk entry $disk"
   dev=$(echo $disk | awk -F, {'print $1'})
-  sizeGB=$(echo $disk | awk -F, {'print $2'})
-  dir=$(echo $disk | awk -F, {'print $3'})
-  echo "Need to create partition on disk $dev of size $sizeGB at $dir"
-  create_partition_and_mount $dev $sizeGB $dir
+  lvm=$(echo $disk | awk -F, {'print $2'})
+  sizeGB=$(echo $disk | awk -F, {'print $3'})
+  dir=$(echo $disk | awk -F, {'print $4'})
+  if [[ "$lvm" -eq "1" ]]; then
+    echo "Need to create lvm partition on disk $dev of size $sizeGB at $dir"
+    create_lvm_and_mount $dev $LVM_DISK_INDEX $sizeGB $dir
+    let LVM_DISK_INDEX=LVM_DISK_INDEX+1
+  else
+    echo "Need to create non-lvm partition on disk $dev of size $sizeGB at $dir"
+    create_partition_and_mount $dev $sizeGB $dir
+  fi
 done
 
 
 echo "Illustrating a different way the parameters could have been passed via terraform templating"
 %{ for disk in disks ~}
-echo need to create partition and mount on dev ${disk.dev} of size ${disk.sizeGB} at ${disk.dir}
+echo "need to create partition and mount on dev ${disk.dev} of size ${disk.sizeGB} at ${disk.dir} is lvm ${disk.lvm}?"
 %{ endfor ~}

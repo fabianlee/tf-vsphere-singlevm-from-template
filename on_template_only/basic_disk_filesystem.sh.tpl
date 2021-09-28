@@ -35,7 +35,7 @@ mkfs.ext4 /dev/$vgname/$lvname
 
 mkdir -p $mountdir
 echo '/dev/$vgname/$lvname $mountdir ext4 defaults 0 0' >> /etc/fstab
-mount $mount
+mount $mountdir
 echo "result of mount $mountdir is $?"
 
 }
@@ -49,7 +49,7 @@ mysize=$2
 mountdir="$3"
 
 # make full size of device available, non-LVM
-parted --script -a none /dev/$mydev \ unit s \ mklabel gpt \ mkpart primary 34s 100%
+parted --script -a none /dev/$mydev \ unit s \ mklabel gpt \ mkpart primary 40s 100%
 parted --script /dev/$mydev unit GB \ print free
 sleep 5
 lsblk

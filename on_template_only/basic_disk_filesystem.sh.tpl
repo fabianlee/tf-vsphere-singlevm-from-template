@@ -34,7 +34,7 @@ set +x
 mkfs.ext4 /dev/$vgname/$lvname
 
 mkdir -p $mountdir
-echo '/dev/$vgname/$lvname $mountdir ext4 defaults 0 0' >> /etc/fstab
+echo "/dev/$vgname/$lvname $mountdir ext4 defaults 0 0" >> /etc/fstab
 mount $mountdir
 echo "result of mount $mountdir is $?"
 

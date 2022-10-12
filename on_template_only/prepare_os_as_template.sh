@@ -22,7 +22,8 @@ fi
 ls -l /etc/netplan
 sudo rm -f /etc/netplan/*.yaml
 
-rm prepare_template.sh
+# remove self
+rm prepare_os_as_template.sh
 
 history -c
 sudo shutdown -h now
